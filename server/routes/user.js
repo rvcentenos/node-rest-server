@@ -6,9 +6,11 @@ const _ = require('underscore');
 
 const User = require('../models/user');
 
+const { verificaToken, verificaAdminRole } = require('../middlewares/autentication');
+
 const app = express();
 
-app.get('/usuario', function(req, res) {
+app.get('/usuario', verificaToken, (req, res) => {
 
     let desde = req.query.desde || 0;
     desde = Number(desde);
@@ -31,6 +33,7 @@ app.get('/usuario', function(req, res) {
 
                 res.json({
                     ok: true,
+                    user: req.user,
                     users,
                     count: conteo
                 });
@@ -39,7 +42,7 @@ app.get('/usuario', function(req, res) {
         })
 });
 
-app.post('/usuario', function(req, res) {
+app.post('/usuario', [verificaToken, verificaAdminRole], (req, res) => {
     let body = req.body;
 
     let user = new User({
@@ -67,7 +70,7 @@ app.post('/usuario', function(req, res) {
 
 });
 
-app.put('/usuario/:id', function(req, res) {
+app.put('/usuario/:id', [verificaToken, verificaAdminRole], (req, res) => {
     let id = req.params.id;
     let body = _.pick(req.body, ['name', 'email', 'image', 'role', 'state']);
 
@@ -89,7 +92,7 @@ app.put('/usuario/:id', function(req, res) {
 
 // ==============================================
 // Delete
-app.delete('/usuario/:id', function(req, res) {
+app.delete('/usuario/:id', [verificaToken, verificaAdminRole], (req, res) => {
 
     let id = req.params.id;
     let body = {
@@ -110,31 +113,6 @@ app.delete('/usuario/:id', function(req, res) {
             user: userDeleted
         });
     });
-
-
-    // User.findByIdAndRemove(id, (err, userDeleted) => {
-    //     if (err) {
-    //         return res.status(400).json({
-    //             ok: false,
-    //             err
-    //         });
-    //     };
-
-    //     if (userDeleted == null) {
-    //         return res.status(400).json({
-    //             ok: false,
-    //             err: {
-    //                 message: 'Usuario no encontrado'
-    //             }
-    //         });
-    //     };
-
-    //     res.json({
-    //         ok: true,
-    //         user: userDeleted
-    //     });
-    // });
-
 });
 
 module.exports = app;
